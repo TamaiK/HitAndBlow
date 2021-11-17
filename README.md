@@ -1,18 +1,72 @@
-## Getting Started
+## ヒット＆ブロー
+コンピュータが選択した4つの数字を当てるゲーム
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+## 概要
+```
+・同じ数字を二回以上は使わない
+・数値と位置の両方が合っている場合は「ヒット」
+・数値は合っているが位置が違う場合は「ブロー」
+```
 
-## Folder Structure
+## 開始時
+表示は無いが、4つの数字を設定する
 
-The workspace contains two folders by default, where:
+## 入力
+``` console
+4桁の数字を入力して下さい：
+```
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+### 入力チェック
+例：数字以外
+``` console
+4桁の数字を入力して下さい：absd
+注意：4桁の数字を入力してください。
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+4桁の数字を入力して下さい：
+```
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+例：数字の数が合わない
+``` console
+4桁の数字を入力して下さい：12345
+注意：4桁の数字を入力してください。
 
-## Dependency Management
+4桁の数字を入力して下さい：
+```
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+## 判定
+
+### 不一致
+不一致の場合は、「ヒット」と「ブロー」の数を表示する
+
+``` console
+4桁の数字を入力して下さい：1234
+ヒット：1個、ブロー：1個
+
+4桁の数字を入力して下さい：
+```
+
+### 完全一致
+お祝いの言葉と試行回数を表示する
+
+例：5回目の挑戦
+``` console
+4桁の数字を入力して下さい：4207
+おめでとう！5回目で成功♪
+```
+
+## チャレンジ対応
+
+### 選択する数字を5つにする
+``` console
+5桁の数字を入力して下さい：
+おめでとう！5回目で成功♪
+```
+
+### 3回外すごとに、数字を1つ開示
+``` console
+4桁の数字を入力して下さい：1234
+ヒット：1個、ブロー：1個
+
+ヒント：1XXX
+4桁の数字を入力して下さい：
+```
