@@ -20,7 +20,7 @@ public class App {
     }
 
     // 変数
-    
+
     private static Random random;
     private static Scanner scanner;
 
@@ -75,7 +75,7 @@ public class App {
 
         int challengeCount = 0;
         GuessResult result = GuessResult.NONE;
-        while(needNextGuessing(result)){
+        while (needNextGuessing(result)) {
 
             challengeCount++;
 
@@ -91,11 +91,11 @@ public class App {
 
     private static void setCorrectNumber() {
 
-        while(needCreateNumuber()){
-            
+        while (needCreateNumuber()) {
+
             String correctNum = String.valueOf(createRandomNumber(MIN_NUM, MAX_NUM));
 
-            if(correct.indexOf(String.valueOf(correctNum)) < 0){
+            if (correct.indexOf(String.valueOf(correctNum)) < 0) {
                 correct.add(correctNum);
             }
         }
@@ -112,18 +112,18 @@ public class App {
     private static String getAnswer() {
 
         String answer = FAILURE_INPUT;
-        while(needInput(answer)){
+        while (needInput(answer)) {
 
             dispRequestInput();
 
             String input = scanner.nextLine();
 
-            if(!isNumber(input)){
+            if (!isNumber(input)) {
                 dispErrorInput();
                 continue;
             }
 
-            if(!isInRange(input)){
+            if (!isInRange(input)) {
                 dispErrorInput();
                 continue;
             }
@@ -139,11 +139,10 @@ public class App {
     }
 
     private static boolean isNumber(String input) {
-        
-        try{
+
+        try {
             Integer.parseInt(input);
-        }
-        catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             return false;
         }
 
@@ -175,7 +174,7 @@ public class App {
     private static void initCompareResult() {
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
-            
+
             compareResult[digit] = CompareResult.NONE;
         }
     }
@@ -183,9 +182,9 @@ public class App {
     private static void checkHit(String answer) {
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
-            
-            if(answer.charAt(digit) == getCorrectCharAt(digit)){
-                
+
+            if (answer.charAt(digit) == getCorrectCharAt(digit)) {
+
                 compareResult[digit] = CompareResult.HIT;
             }
         }
@@ -196,29 +195,29 @@ public class App {
     }
 
     private static void checkBlow(String answer) {
-            
+
         List<Integer> isHitOrBlowList = new ArrayList<>();
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
-            
-            if(compareResult[digit] == CompareResult.HIT){
+
+            if (compareResult[digit] == CompareResult.HIT) {
                 isHitOrBlowList.add(digit);
             }
         }
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
-            
-            if(compareResult[digit] == CompareResult.HIT){
+
+            if (compareResult[digit] == CompareResult.HIT) {
                 continue;
             }
-            
+
             for (int target = 0; target < DIGITS_NUM; target++) {
-                
-                if(getCorrectCharAt(digit) != answer.charAt(target)){
+
+                if (getCorrectCharAt(digit) != answer.charAt(target)) {
                     continue;
                 }
 
-                if(isHitOrBlowList.indexOf(target) >= 0){
+                if (isHitOrBlowList.indexOf(target) >= 0) {
                     continue;
                 }
 
@@ -231,8 +230,8 @@ public class App {
     private static GuessResult getCheckResult() {
 
         for (CompareResult result : compareResult) {
-            
-            if(result != CompareResult.HIT){
+
+            if (result != CompareResult.HIT) {
                 return GuessResult.INCORRECT;
             }
         }
@@ -242,16 +241,16 @@ public class App {
 
     private static void dispResult(App.GuessResult result, int challengeCount) {
 
-        switch(result){
+        switch (result) {
 
-            case CORRECT:
-                dispCorrect(challengeCount);
-                break;
+        case CORRECT:
+            dispCorrect(challengeCount);
+            break;
 
-                default:
-                case INCORRECT:
-                    dispHitAndBlowNum();
-                    break;
+        default:
+        case INCORRECT:
+            dispHitAndBlowNum();
+            break;
         }
     }
 
@@ -269,11 +268,11 @@ public class App {
     }
 
     private static int getHitCount() {
-        
+
         int hit = 0;
         for (CompareResult result : compareResult) {
-            
-            if(result == CompareResult.HIT){
+
+            if (result == CompareResult.HIT) {
                 hit++;
             }
         }
@@ -282,11 +281,11 @@ public class App {
     }
 
     private static int getBlowCount() {
-        
+
         int blow = 0;
         for (CompareResult result : compareResult) {
-            
-            if(result == CompareResult.BLOW){
+
+            if (result == CompareResult.BLOW) {
                 blow++;
             }
         }
