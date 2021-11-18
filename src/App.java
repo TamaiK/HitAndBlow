@@ -25,15 +25,20 @@ public class App {
     private static Scanner scanner;
 
     private static List<String> correct;
-    private static CompareResult[] compareResult;
+
+    private static int hintDigits;
 
     // 定数
 
-    private static final int DIGITS_NUM = 4;
+    private static final int DIGITS_NUM = 5;
     private static final int MIN_NUM = 0;
     private static final int MAX_NUM = 9;
+    private static final int HINT_ADD_INTERVAL = 3;
+    private static final int FIRST_CHALLENGE = 0;
+    private static final int MISSING_DIGIT = -1;
 
     private static final String FAILURE_INPUT = "";
+    private static final String UNKNOWN_NUM = "X";
 
     private static final String MESSAGE_FOR_BLANK = "";
 
@@ -42,6 +47,8 @@ public class App {
 
     private static final String MESSAGE_FORMAT_FOR_CORRECT = "おめでとう！%d回目で成功♪";
     private static final String MESSAGE_FORMAT_FOR_HIT_AND_BLOW_NUM = "ヒット：%d個、ブロー：%d個";
+
+    private static final String MESSAGE_FOR_HINT = "ヒント：";
 
     static {
         init();
@@ -60,7 +67,8 @@ public class App {
         scanner = new Scanner(System.in);
 
         correct = new ArrayList<>();
-        compareResult = new CompareResult[DIGITS_NUM];
+
+        hintDigits = 0;
     }
 
     private static void fin() {
@@ -75,23 +83,27 @@ public class App {
 
         int challengeCount = 0;
         GuessResult result = GuessResult.NONE;
-        while (needNextGuessing(result)) {
+        while (canChallengeNextGuessing(result)) {
+
+            hintDigitsAddIfNeeded(challengeCount);
+            dispHint();
 
             challengeCount++;
 
             String answer = getAnswer();
 
-            checkCorrect(answer);
+            CompareResult[] scoringArray = new CompareResult[DIGITS_NUM];
+            scoringAnswer(answer, scoringArray);
 
-            result = getCheckResult();
+            result = getResult(scoringArray);
 
-            dispResult(result, challengeCount);
+            dispResult(result, challengeCount, scoringArray);
         }
     }
 
     private static void setCorrectNumber() {
 
-        while (needCreateNumuber()) {
+        while (isLackedCorrectNumuber()) {
 
             String correctNum = String.valueOf(createRandomNumber(MIN_NUM, MAX_NUM));
 
@@ -101,18 +113,50 @@ public class App {
         }
     }
 
-    private static boolean needCreateNumuber() {
+    private static boolean isLackedCorrectNumuber() {
         return correct.size() < DIGITS_NUM;
     }
 
-    private static boolean needNextGuessing(GuessResult result) {
+    private static void hintDigitsAddIfNeeded(int challengeCount) {
+
+        if (challengeCount == FIRST_CHALLENGE) {
+            return;
+        }
+
+        if (challengeCount % HINT_ADD_INTERVAL == 0) {
+            hintDigits++;
+        }
+    }
+
+    private static void dispHint() {
+
+        if (hintDigits == 0) {
+            return;
+        }
+
+        print(MESSAGE_FOR_HINT);
+
+        for (int digit = 0; digit < DIGITS_NUM; digit++) {
+
+            if (digit < hintDigits) {
+                print(correct.get(digit));
+                continue;
+            }
+
+            print(UNKNOWN_NUM);
+        }
+
+        dipsBlankLine();
+    }
+
+    private static boolean canChallengeNextGuessing(GuessResult result) {
         return result != GuessResult.CORRECT;
     }
 
     private static String getAnswer() {
 
         String answer = FAILURE_INPUT;
-        while (needInput(answer)) {
+        while (isInput(answer)) {
 
             dispRequestInput();
 
@@ -149,7 +193,7 @@ public class App {
         return true;
     }
 
-    private static boolean needInput(String answer) {
+    private static boolean isInput(String answer) {
         return answer == null || answer.isBlank();
     }
 
@@ -162,30 +206,30 @@ public class App {
         return input.length() == DIGITS_NUM;
     }
 
-    private static void checkCorrect(String answer) {
+    private static void scoringAnswer(String answer, CompareResult[] scoringArray) {
 
-        initCompareResult();
+        initScoringResult(scoringArray);
 
-        checkHit(answer);
+        markingHit(answer, scoringArray);
 
-        checkBlow(answer);
+        markingBlow(answer, scoringArray);
     }
 
-    private static void initCompareResult() {
+    private static void initScoringResult(CompareResult[] scoringArray) {
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
 
-            compareResult[digit] = CompareResult.NONE;
+            scoringArray[digit] = CompareResult.NONE;
         }
     }
 
-    private static void checkHit(String answer) {
+    private static void markingHit(String answer, CompareResult[] scoringArray) {
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
 
             if (answer.charAt(digit) == getCorrectCharAt(digit)) {
 
-                compareResult[digit] = CompareResult.HIT;
+                scoringArray[digit] = CompareResult.HIT;
             }
         }
     }
@@ -194,42 +238,62 @@ public class App {
         return correct.get(digit).charAt(0);
     }
 
-    private static void checkBlow(String answer) {
+    private static void markingBlow(String answer, CompareResult[] scoringArray) {
 
         List<Integer> isHitOrBlowList = new ArrayList<>();
 
-        for (int digit = 0; digit < DIGITS_NUM; digit++) {
-
-            if (compareResult[digit] == CompareResult.HIT) {
-                isHitOrBlowList.add(digit);
-            }
-        }
+        settingHit(isHitOrBlowList, scoringArray);
 
         for (int digit = 0; digit < DIGITS_NUM; digit++) {
 
-            if (compareResult[digit] == CompareResult.HIT) {
+            if (scoringArray[digit] == CompareResult.HIT) {
                 continue;
             }
 
-            for (int target = 0; target < DIGITS_NUM; target++) {
+            char correctChar = getCorrectCharAt(digit);
+            int blowDigit = searchCharDigit(answer, isHitOrBlowList, correctChar);
 
-                if (getCorrectCharAt(digit) != answer.charAt(target)) {
-                    continue;
-                }
-
-                if (isHitOrBlowList.indexOf(target) >= 0) {
-                    continue;
-                }
-
-                isHitOrBlowList.add(target);
-                compareResult[digit] = CompareResult.BLOW;
+            if (blowDigit != MISSING_DIGIT) {
+                isHitOrBlowList.add(blowDigit);
+                scoringArray[digit] = CompareResult.BLOW;
             }
         }
     }
 
-    private static GuessResult getCheckResult() {
+    private static void settingHit(List<Integer> isHitOrBlowList, CompareResult[] scoringArray) {
 
-        for (CompareResult result : compareResult) {
+        for (int digit = 0; digit < DIGITS_NUM; digit++) {
+
+            if (scoringArray[digit] == CompareResult.HIT) {
+                isHitOrBlowList.add(digit);
+            }
+        }
+    }
+
+    private static int searchCharDigit(String answer, List<Integer> isHitOrBlowList, char correctChar) {
+
+        int digit = MISSING_DIGIT;
+
+        for (int targetDigit = 0; targetDigit < DIGITS_NUM; targetDigit++) {
+
+            if (correctChar != answer.charAt(targetDigit)) {
+                continue;
+            }
+
+            if (isHitOrBlowList.indexOf(targetDigit) >= 0) {
+                continue;
+            }
+
+            digit = targetDigit;
+            break;
+        }
+
+        return digit;
+    }
+
+    private static GuessResult getResult(CompareResult[] scoringArray) {
+
+        for (CompareResult result : scoringArray) {
 
             if (result != CompareResult.HIT) {
                 return GuessResult.INCORRECT;
@@ -239,7 +303,7 @@ public class App {
         return GuessResult.CORRECT;
     }
 
-    private static void dispResult(App.GuessResult result, int challengeCount) {
+    private static void dispResult(GuessResult result, int challengeCount, CompareResult[] scoringArray) {
 
         switch (result) {
 
@@ -249,7 +313,7 @@ public class App {
 
         default:
         case INCORRECT:
-            dispHitAndBlowNum();
+            dispHitAndBlowNum(scoringArray);
             break;
         }
     }
@@ -258,19 +322,19 @@ public class App {
         println(MESSAGE_FORMAT_FOR_CORRECT, challengeCount);
     }
 
-    private static void dispHitAndBlowNum() {
+    private static void dispHitAndBlowNum(CompareResult[] scoringArray) {
 
-        int hit = getHitCount();
-        int blow = getBlowCount();
+        int hit = getHitCount(scoringArray);
+        int blow = getBlowCount(scoringArray);
 
         println(MESSAGE_FORMAT_FOR_HIT_AND_BLOW_NUM, hit, blow);
         dipsBlankLine();
     }
 
-    private static int getHitCount() {
+    private static int getHitCount(CompareResult[] scoringArray) {
 
         int hit = 0;
-        for (CompareResult result : compareResult) {
+        for (CompareResult result : scoringArray) {
 
             if (result == CompareResult.HIT) {
                 hit++;
@@ -280,10 +344,10 @@ public class App {
         return hit;
     }
 
-    private static int getBlowCount() {
+    private static int getBlowCount(CompareResult[] scoringArray) {
 
         int blow = 0;
-        for (CompareResult result : compareResult) {
+        for (CompareResult result : scoringArray) {
 
             if (result == CompareResult.BLOW) {
                 blow++;
@@ -294,6 +358,10 @@ public class App {
     }
 
     // 汎用関数
+
+    private static void print(String str) {
+        System.out.print(str);
+    }
 
     private static void print(String str, Object... args) {
         System.out.print(String.format(str, args));
